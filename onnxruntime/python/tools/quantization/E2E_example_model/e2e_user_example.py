@@ -65,7 +65,7 @@ def preprocess_func(images_folder, height, width, size_limit=0):
 
 def main():
     model_path = './resnet50_v1.onnx'
-    calibration_dataset_path = './calibration_data_set'
+    calibration_dataset_path = './test_images'
     dr = ResNet50DataReader(calibration_dataset_path)
     #call calibrate to generate quantization dictionary containing the zero point and scale values
     quantization_params_dict = calibrate(model_path,dr)

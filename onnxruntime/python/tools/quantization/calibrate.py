@@ -51,6 +51,7 @@ class ONNXCalibrater:
         self.augmented_model_path = augmented_model_path
         self.input_name_to_nodes = input_name_to_nodes
      
+     
     def augment_graph(self):
         '''
         Adds ReduceMin and ReduceMax nodes to all quantization_candidates op type nodes in
@@ -104,6 +105,7 @@ class ONNXCalibrater:
         model.graph.output.extend(added_outputs)
 
         return model
+
 
     #Using augmented outputs to generate inputs for quantization
     def get_intermediate_outputs(self,calib_mode='naive'):
@@ -169,23 +171,6 @@ class ONNXCalibrater:
                 else:
                     self.input_name_to_nodes[input_name].append(node) 
 
-
-    def _get_next_nodes(self, model, curr_node):
-        '''
-            Helper function to get child nodes for a given node
-        '''
-
-        if not self.input_name_to_nodes:
-           self._get_input_name_to_nodes(model)
-
-        children = []
-        for output in curr_node.output:
-            if output in self.input_name_to_nodes:
-                for child_node in self.input_name_to_nodes[output]:
-                    children.append(child_node)
-
-        return children
-
     
     def calculate_scale_zeropoint(self, node, next_node, rmin, rmax):
 
@@ -218,6 +203,7 @@ class ONNXCalibrater:
 
         return zp_and_scale
 
+
     def calculate_quantization_params(self,quantization_thresholds):
         '''
             Given quantization thresholds, calculate the quantization params.
@@ -247,13 +233,14 @@ class ONNXCalibrater:
         self._get_input_name_to_nodes(model)
 
         for node in model.graph.node:
-            next_nodes = self._get_next_nodes(model,node)
-            for next_node in next_nodes:
-                node_output_name = next_node.output[0]
-                if node_output_name in quantization_thresholds:
-                    node_thresholds = quantization_thresholds[node_output_name]
-                    node_params = self.calculate_scale_zeropoint(node, next_node, node_thresholds[0], node_thresholds[1])
-                    quantization_params[node_output_name] = node_params
+            for node_output_name in node.output:
+                if node_output_name in self.input_name_to_nodes:
+                    next_nodes = self.input_name_to_nodes[node_output_name]
+                    for next_node in next_nodes:
+                        if node_output_name in quantization_thresholds:
+                            node_thresholds = quantization_thresholds[node_output_name]
+                            node_params = self.calculate_scale_zeropoint(node, next_node, node_thresholds[0], node_thresholds[1])
+                            quantization_params[node_output_name] = node_params
 
         return quantization_params
 
