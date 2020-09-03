@@ -12,8 +12,8 @@ import onnx
 import onnxruntime
 import numpy as np
 from onnx import helper, TensorProto, numpy_helper, shape_inference
-#from onnxruntime.quantization.calibrate import calibrate, CalibrationDataReader, ONNXCalibrater
-from calibrate import calibrate, CalibrationDataReader, ONNXCalibrater
+from onnxruntime.quantization.calibrate import calibrate, CalibrationDataReader, ONNXCalibrater
+
 
 
 def generate_input_initializer(tensor_shape,tensor_dtype,input_name):
@@ -26,13 +26,14 @@ def generate_input_initializer(tensor_shape,tensor_dtype,input_name):
 
 
 class TestDataReader(CalibrationDataReader):
-    def __init__(self,calibration_image_folder,augmented_model_path='augmented_model.onnx'): 
+    #for test purpose
+    def __init__(self, calibration_image_folder, augmented_model_path='augmented_model.onnx'):
         self.image_folder = calibration_image_folder
 
     def get_next(self):
         return None
 
-      
+
 class TestCalibrate(unittest.TestCase):
     
     def test_augment_graph(self):
@@ -57,7 +58,6 @@ class TestCalibrate(unittest.TestCase):
         C = helper.make_tensor_value_info('C', TensorProto.FLOAT, ())
         D = helper.make_tensor_value_info('D', TensorProto.FLOAT, ())
         E = helper.make_tensor_value_info('E', TensorProto.FLOAT, ())
-    
         conv_node = onnx.helper.make_node('Conv', ['A'], ['C'],name='Conv')
         clip_node = onnx.helper.make_node('Clip', ['C'], ['D'], name='Clip')
         matmul_node = onnx.helper.make_node('MatMul', ['B','D'], ['E'], name='MatMul')
@@ -67,9 +67,9 @@ class TestCalibrate(unittest.TestCase):
         onnx.save(model, test_model_path)
 
         # Augmenting graph
-        data_reader = TestDataReader('./test_image_folder')
+        data_reader = TestDataReader('./test_images')
         augmented_model_path = './augmented_test_model_1.onnx'
-        calibrater = ONNXCalibrater(test_model_path, data_reader,['Conv','MatMul'], [], [], augmented_model_path)
+        calibrater = ONNXCalibrater(test_model_path, data_reader, ['Conv','MatMul'], [], [], augmented_model_path)
         augmented_model = calibrater.augment_graph()
         onnx.save(augmented_model,augmented_model_path)
 
@@ -91,6 +91,7 @@ class TestCalibrate(unittest.TestCase):
 
 
         ''' TEST_CONFIG_2 '''
+
         #  main graph
         #
         #   [F]
@@ -112,9 +113,9 @@ class TestCalibrate(unittest.TestCase):
         onnx.save(model, test_model_path)
 
         # Augmenting graph
-        data_reader = TestDataReader('./test_image_folder')
+        data_reader = TestDataReader('./test_images')
         augmented_model_path = './augmented_test_model_2.onnx'
-        calibrater = ONNXCalibrater(test_model_path, data_reader,['Conv','MatMul'], [], [], augmented_model_path)
+        calibrater = ONNXCalibrater(test_model_path, data_reader, ['Conv','MatMul'], [], [], augmented_model_path)
         augmented_model = calibrater.augment_graph()
         onnx.save(augmented_model, augmented_model_path)
 
@@ -155,7 +156,6 @@ class TestCalibrate(unittest.TestCase):
         M = helper.make_tensor_value_info('M', TensorProto.FLOAT, ())
         N = helper.make_tensor_value_info('N', TensorProto.FLOAT, ())
         O = helper.make_tensor_value_info('O', TensorProto.FLOAT, ())
-       
         relu_node = onnx.helper.make_node('Relu', ['I'], ['J'], name='Relu')
         conv_node = onnx.helper.make_node('Conv', ['J'], ['M'], name='Conv')
         clip_node = onnx.helper.make_node('Clip', ['M'], ['N'], name='Clip')
@@ -166,8 +166,8 @@ class TestCalibrate(unittest.TestCase):
         onnx.save(model, test_model_path)
 
         # Augmenting graph
-        data_reader = TestDataReader('./test_image_folder')
-        augmented_model_path = './augmented_test_model_large.onnx'
+        data_reader = TestDataReader('./test_images')
+        augmented_model_path = './augmented_test_model_3.onnx'
         calibrater = ONNXCalibrater(test_model_path, data_reader, ['Conv','MatMul'], [], [], augmented_model_path)
         augmented_model = calibrater.augment_graph()
         onnx.save(augmented_model, augmented_model_path)
@@ -192,17 +192,17 @@ class TestCalibrate(unittest.TestCase):
 
         # main graph
         #
-        #   [P] 
-        #    |     
-        #   Relu      -- 
-        #    | --[Q]    \
-        #   Conv         \   
+        #       [P] 
+        #        |     
+        #       Relu    
+        #     /        \
+        #   Conv         \  - [Q] 
         #    | --[R]      \   
         #   Relu          |
-        #    | --[S]     /  [Q]
+        #    | --[S]     /  
         #   Conv        /
         # [T]   \      /   
-        #         Add (MatMul)
+        #         Add
         #          |
         #         [U]
         
@@ -212,7 +212,6 @@ class TestCalibrate(unittest.TestCase):
         S = helper.make_tensor_value_info('S', TensorProto.FLOAT, ())
         T = helper.make_tensor_value_info('T', TensorProto.FLOAT, ())
         U = helper.make_tensor_value_info('U', TensorProto.FLOAT, ())
-      
         relu_node_1 = onnx.helper.make_node('Relu', ['P'], ['Q'], name='Relu1')
         conv_node_1 = onnx.helper.make_node('Conv', ['Q'], ['R'], name='Conv1')
         relu_node_2 = onnx.helper.make_node('Relu',['R'],['S'], name= 'Relu2')
@@ -225,9 +224,9 @@ class TestCalibrate(unittest.TestCase):
         onnx.save(model, test_model_path)
 
         #Augmenting graph
-        data_reader = TestDataReader('./test_image_folder')
+        data_reader = TestDataReader('./test_images')
         augmented_model_path = './augmented_test_model_4.onnx'
-        calibrater = ONNXCalibrater(test_model_path, data_reader,['Conv','MatMul'], [], [], augmented_model_path)
+        calibrater = ONNXCalibrater(test_model_path, data_reader, ['Conv','MatMul'], [], [], augmented_model_path)
         augmented_model = calibrater.augment_graph()
         onnx.save(augmented_model, augmented_model_path)
 
@@ -245,6 +244,7 @@ class TestCalibrate(unittest.TestCase):
             self.assertTrue(output in augmented_model_outputs)
 
         print('Finished TEST_CONFIG_4')
+        
 
 
 if __name__ == '__main__':
