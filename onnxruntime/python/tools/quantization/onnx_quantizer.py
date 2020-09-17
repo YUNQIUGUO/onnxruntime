@@ -15,13 +15,13 @@ from onnx import onnx_pb as onnx_proto
 from onnx import shape_inference
 from onnxruntime import SessionOptions, InferenceSession, GraphOptimizationLevel
 
-from quant_utils import QuantizationMode, QuantizedValueType, QuantizedInitializer, QuantizedValue, quantization_modes
-from quant_utils import find_by_name, get_elem_index, get_mul_node, generate_identified_filename, attribute_to_kwarg
-from quant_utils import QuantType, onnx_domain, __producer__, __version__
+from .quant_utils import QuantizationMode, QuantizedValueType, QuantizedInitializer, QuantizedValue, quantization_modes
+from .quant_utils import find_by_name, get_elem_index, get_mul_node, generate_identified_filename, attribute_to_kwarg
+from .quant_utils import QuantType, onnx_domain, __producer__, __version__
 
-from registry import CreateOpQuantizer, CreateDefaultOpQuantizer
+from .registry import CreateOpQuantizer, CreateDefaultOpQuantizer
 
-from onnx_model import ONNXModel
+from .onnx_model import ONNXModel
 
 
 def quantize_data(data, quantize_range, qType):
