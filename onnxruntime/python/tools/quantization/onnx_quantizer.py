@@ -77,7 +77,6 @@ def _get_qrange_for_qType(qType, reduce_range=False):
 class ONNXQuantizer:
     def __init__(self, model, per_channel, reduce_range, mode, static, weight_qType, input_qType, quantization_params,
                  nodes_to_quantize, nodes_to_exclude, op_types_to_quantize):
-        onnx_model = shape_inference.infer_shapes(model)
         self.model = ONNXModel(onnx_model)
         self.value_infos = {vi.name: vi for vi in onnx_model.graph.value_info}
         self.per_channel = per_channel  # weight-pack per channel
@@ -293,13 +292,6 @@ class ONNXQuantizer:
     def is_input_a_weight(self, input_name):
         initializer = find_by_name(input_name, self.model.initializer())
         return initializer is not None
-
-    def _is_valid_quantize_value(self, value_name):
-        if value_name in self.value_infos:
-            value_info = self.value_infos[value_name]
-            return value_info.type.HasField(
-                'tensor_type') and value_info.type.tensor_type.elem_type == onnx_proto.TensorProto.FLOAT
-        return self._is_valid_initializer_value(value_name)
 
     def _is_valid_initializer_value(self, value_name):
         weight = find_by_name(value_name, self.model.initializer())
