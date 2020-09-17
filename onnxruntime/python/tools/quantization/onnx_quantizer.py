@@ -78,7 +78,6 @@ class ONNXQuantizer:
     def __init__(self, model, per_channel, reduce_range, mode, static, weight_qType, input_qType, quantization_params,
                  nodes_to_quantize, nodes_to_exclude, op_types_to_quantize):
         self.model = ONNXModel(onnx_model)
-        self.value_infos = {vi.name: vi for vi in onnx_model.graph.value_info}
         self.per_channel = per_channel  # weight-pack per channel
         self.reduce_range = reduce_range
         self.mode = mode  # QuantizationMode.Value
